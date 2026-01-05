@@ -8,14 +8,14 @@ const app = express();
 
 // --- UPDATED CORS SETTINGS ---
 app.use(cors({
-  origin: [
-    "https://jira-clone-eight-saqe.vercel.app", // Your Vercel Frontend
-    "http://localhost:5173",                    // Local Vite
-    "http://localhost:3000"                     // Local React
-  ],
-  credentials: true, // Essential for passing cookies/tokens
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+    origin: [
+        "https://jira-clone-eight-saqe.vercel.app", // Your Vercel Frontend
+        "http://localhost:5173",                    // Local Vite
+        "http://localhost:3000"                     // Local React
+    ],
+    credentials: true, // Essential for passing cookies/tokens
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "application/json"]
 }));
 // -----------------------------
 
@@ -33,12 +33,12 @@ app.get('/api/health', (req, res) => res.json({ ok: true }));
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
-  try {
-    await sequelize.authenticate();
-    await sequelize.sync({ alter: true });
-    console.log('✅ Database Connected and Synced');
-  } catch (err) {
-    console.error('❌ DB Error:', err);
-  }
+    console.log(`Server running on port ${PORT}`);
+    try {
+        await sequelize.authenticate();
+        await sequelize.sync({ alter: true });
+        console.log('✅ Database Connected and Synced');
+    } catch (err) {
+        console.error('❌ DB Error:', err);
+    }
 });
