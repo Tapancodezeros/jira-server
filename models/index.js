@@ -6,6 +6,7 @@ const ProjectMember = require('./ProjectMember');
 const Notification = require('./Notification');
 const Comment = require('./Comment');
 const Activity = require('./Activity');
+const WorkLog = require('./WorkLog');
 
 // User <-> Project
 User.hasMany(Project, { foreignKey: 'ownerId', as: 'ownedProjects' });
@@ -47,4 +48,9 @@ Activity.belongsTo(User, { foreignKey: 'userId', as: 'actor' });
 Task.hasMany(Task, { foreignKey: 'parentTaskId', as: 'subtasks', onDelete: 'CASCADE' });
 Task.belongsTo(Task, { foreignKey: 'parentTaskId', as: 'parentTask' });
 
-module.exports = { sequelize, User, Project, Task, ProjectMember, Notification, Comment, Activity };
+// Task <-> WorkLog
+Task.hasMany(WorkLog, { foreignKey: 'taskId', as: 'workLogs', onDelete: 'CASCADE' });
+WorkLog.belongsTo(Task, { foreignKey: 'taskId' });
+WorkLog.belongsTo(User, { foreignKey: 'userId', as: 'author' });
+
+module.exports = { sequelize, User, Project, Task, ProjectMember, Notification, Comment, Activity, WorkLog };

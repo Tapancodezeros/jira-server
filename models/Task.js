@@ -25,6 +25,7 @@ const Task = sequelize.define('Task', {
         defaultValue: 'Task'
     },
     originalEstimate: { type: DataTypes.INTEGER, allowNull: true, defaultValue: 0 }, // in minutes
+    remainingEstimate: { type: DataTypes.INTEGER, allowNull: true, defaultValue: 0 }, // in minutes
     timeSpent: { type: DataTypes.INTEGER, allowNull: true, defaultValue: 0 } // in minutes
 }, {
     paranoid: true,

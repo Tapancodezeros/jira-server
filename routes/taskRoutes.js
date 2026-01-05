@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Task, User, Notification, Comment, Activity } = require('../models/index');
+const { Task, User, Notification, Comment, Activity, WorkLog } = require('../models/index');
 const authMiddleware = require('../middleware/authMiddleware');
 
 // Get tasks for a project
@@ -250,6 +250,93 @@ router.get('/:id/activities', authMiddleware, async (req, res) => {
             order: [['createdAt', 'DESC']]
         });
         res.json(activities);
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
+
+// --- WorkLogs ---
+
+// Get worklogs for a task
+router.get('/:id/worklogs', authMiddleware, async (req, res) => {
+    try {
+        const worklogs = await WorkLog.findAll({
+            where: { taskId: req.params.id },
+            include: [{ model: User, as: 'author', attributes: ['name', 'id'] }],
+            order: [['startedAt', 'DESC']]
+        });
+        res.json(worklogs);
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
+
+// Add worklog
+router.post('/:id/worklogs', authMiddleware, async (req, res) => {
+    try {
+        const { timeSpent, startedAt, description } = req.body; // timeSpent in minutes
+        const taskId = req.params.id;
+        const task = await Task.findByPk(taskId);
+        if (!task) return res.status(404).json({ message: 'Task not found' });
+
+        const worklog = await WorkLog.create({
+            taskId,
+            userId: req.user.id,
+            timeSpent,
+            startedAt: startedAt || new Date(),
+            description
+        });
+
+        // Update task time tracking
+        const oldTimeSpent = task.timeSpent || 0;
+        const newTimeSpent = oldTimeSpent + Number(timeSpent);
+
+        let newRemaining = task.remainingEstimate;
+        // If remainingEstimate is not null, reduce it
+        if (newRemaining !== null && newRemaining !== undefined) {
+            newRemaining = Math.max(0, newRemaining - Number(timeSpent));
+        }
+
+        await task.update({
+            timeSpent: newTimeSpent,
+            remainingEstimate: newRemaining
+        });
+
+        // Log activity
+        await Activity.create({
+            taskId,
+            userId: req.user.id,
+            type: 'worklog',
+            description: `logged ${timeSpent}m of work`
+        });
+
+        // Return full worklog with author
+        const fullWorkLog = await WorkLog.findByPk(worklog.id, {
+            include: [{ model: User, as: 'author', attributes: ['name', 'id'] }]
+        });
+
+        res.status(201).json(fullWorkLog);
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
+
+// Delete worklog
+router.delete('/:taskId/worklogs/:worklogId', authMiddleware, async (req, res) => {
+    try {
+        const { taskId, worklogId } = req.params;
+        const worklog = await WorkLog.findOne({ where: { id: worklogId, taskId } });
+        if (!worklog) return res.status(404).json({ message: 'Worklog not found' });
+
+        const timeToRemove = worklog.timeSpent;
+        await worklog.destroy();
+
+        // Update task
+        const task = await Task.findByPk(taskId);
+        if (task) {
+            const newTimeSpent = Math.max(0, (task.timeSpent || 0) - timeToRemove);
+            const newRemaining = (task.remainingEstimate || 0) + timeToRemove; // Simple revert approach
+
+            await task.update({
+                timeSpent: newTimeSpent,
+                remainingEstimate: newRemaining
+            });
+        }
+        res.json({ success: true });
     } catch (error) { res.status(500).json({ message: error.message }); }
 });
 
