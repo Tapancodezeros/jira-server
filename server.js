@@ -8,17 +8,11 @@ const app = express();
 
 // --- UPDATED CORS SETTINGS ---
 app.use(cors({
-    origin: [
-        "https://jira-clone-eight-saqe.vercel.app", // Your Vercel Frontend
-        "http://localhost:5173",                    // Local Vite
-        "http://localhost:3000"                     // Local React
-    ],
-    credentials: true, // Essential for passing cookies/tokens
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "application/json"]
+    origin: true,            // Reflects the request origin (effectively allows all)
+    credentials: true,       // Required for cookies/tokens
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: "*"      // Allows all headers
 }));
-// -----------------------------
-
 app.use(express.json());
 
 // Routes
