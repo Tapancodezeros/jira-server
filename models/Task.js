@@ -6,7 +6,7 @@ const Task = sequelize.define('Task', {
     title: { type: DataTypes.STRING, allowNull: false },
     description: { type: DataTypes.TEXT },
     status: {
-        type: DataTypes.ENUM('Todo', 'In Progress', 'Done'),
+        type: DataTypes.ENUM('Backlog', 'Todo', 'In Progress', 'Done'),
         defaultValue: 'Todo'
     },
     priority: {
@@ -18,6 +18,9 @@ const Task = sequelize.define('Task', {
     projectId: { type: DataTypes.INTEGER, allowNull: false },
     dueDate: { type: DataTypes.DATEONLY, allowNull: true },
     labels: { type: DataTypes.JSON, defaultValue: [] },
+    attachments: { type: DataTypes.JSON, defaultValue: [] }, // Files/Reports linked to task
+    issueLinks: { type: DataTypes.JSON, defaultValue: [] }, // Array of { type, linkedTaskId }
+    watchers: { type: DataTypes.JSON, defaultValue: [] }, // Array of User IDs
     parentTaskId: { type: DataTypes.INTEGER, allowNull: true },
     storyPoints: { type: DataTypes.INTEGER, allowNull: true },
     issueType: {
@@ -26,7 +29,9 @@ const Task = sequelize.define('Task', {
     },
     originalEstimate: { type: DataTypes.INTEGER, allowNull: true, defaultValue: 0 }, // in minutes
     remainingEstimate: { type: DataTypes.INTEGER, allowNull: true, defaultValue: 0 }, // in minutes
-    timeSpent: { type: DataTypes.INTEGER, allowNull: true, defaultValue: 0 } // in minutes
+    timeSpent: { type: DataTypes.INTEGER, allowNull: true, defaultValue: 0 }, // in minutes
+    timerStartTime: { type: DataTypes.DATE, allowNull: true }, // For tracking active timer
+    lastHeartbeatAt: { type: DataTypes.DATE, allowNull: true } // For auto-stopping stalled timers
 }, {
     paranoid: true,
     timestamps: true

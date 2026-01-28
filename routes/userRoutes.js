@@ -39,12 +39,13 @@ router.post('/login', async (req, res) => {
 // Update Profile
 router.put('/profile', authMiddleware, async (req, res) => {
     try {
-        const { name, currentPassword, newPassword } = req.body;
+        const { name, currentPassword, newPassword, email } = req.body;
         const user = await User.findByPk(req.user.id);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
         // Update basic info
         if (name) user.name = name;
+        if (email) user.email = email;
 
         // Update password if provided
         if (newPassword) {
