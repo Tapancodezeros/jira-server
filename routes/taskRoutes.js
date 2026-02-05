@@ -51,7 +51,7 @@ router.get('/project/:projectId', authMiddleware, async (req, res) => {
 // Create Task
 router.post('/', authMiddleware, async (req, res) => {
     try {
-        const { title, description, projectId, assigneeId, status, priority, dueDate, labels, parentTaskId } = req.body;
+        const { title, description, projectId, assigneeId, status, priority, startDate, dueDate, labels, parentTaskId } = req.body;
 
         // validate assigneeId if provided
         let finalAssignee = null;
@@ -63,8 +63,23 @@ router.post('/', authMiddleware, async (req, res) => {
             finalAssignee = idNum;
         }
 
+        // Validate parentTaskId if provided
+        let finalProjectId = projectId;
+        if (parentTaskId) {
+            const parent = await Task.findByPk(parentTaskId);
+            if (!parent) return res.status(400).json({ message: 'Parent task not found' });
+
+            // If projectId is not provided, inherit from parent
+            if (!finalProjectId) {
+                finalProjectId = parent.projectId;
+            } else if (Number(finalProjectId) !== parent.projectId) {
+                return res.status(400).json({ message: 'Subtask must belong to the same project as the parent' });
+            }
+        }
+
         const task = await Task.create({
-            title, description, projectId, assigneeId: finalAssignee, status, priority,
+            title, description, projectId: finalProjectId, assigneeId: finalAssignee, status, priority,
+            startDate: startDate || null,
             dueDate: dueDate || null,
             labels: labels || [],
             attachments: req.body.attachments || [],
@@ -633,6 +648,19 @@ router.delete('/:id/attachments/:fileName', authMiddleware, async (req, res) => 
 });
 
 // --- Watchers ---
+
+// Get Watch Status
+router.get('/:id/watch', authMiddleware, async (req, res) => {
+    try {
+        const task = await Task.findByPk(req.params.id);
+        if (!task) return res.status(404).json({ message: 'Task not found' });
+
+        const watchers = task.watchers || [];
+        const isWatching = watchers.includes(req.user.id);
+
+        res.json({ watching: isWatching, watchers });
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
 
 // Toggle Watch
 router.post('/:id/watch', authMiddleware, async (req, res) => {

@@ -16,6 +16,7 @@ const Task = sequelize.define('Task', {
     assigneeId: { type: DataTypes.INTEGER, allowNull: true },
     reporterId: { type: DataTypes.INTEGER, allowNull: true },
     projectId: { type: DataTypes.INTEGER, allowNull: false },
+    startDate: { type: DataTypes.DATEONLY, allowNull: true },
     dueDate: { type: DataTypes.DATEONLY, allowNull: true },
     labels: { type: DataTypes.JSON, defaultValue: [] },
     attachments: { type: DataTypes.JSON, defaultValue: [] }, // Files/Reports linked to task

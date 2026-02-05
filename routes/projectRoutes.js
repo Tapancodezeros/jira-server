@@ -322,4 +322,33 @@ router.get('/:id/reports', authMiddleware, async (req, res) => {
     }
 });
 
+// Get Roadmap (Epics with children)
+router.get('/:id/roadmap', authMiddleware, async (req, res) => {
+    try {
+        const projectId = req.params.id;
+        const epics = await Task.findAll({
+            where: {
+                projectId,
+                issueType: 'Epic'
+            },
+            include: [
+                {
+                    model: Task,
+                    as: 'subtasks',
+                    required: false, // Include even if no subtasks
+                    include: [
+                        { model: User, as: 'assignee', attributes: ['name', 'id'] }
+                    ]
+                },
+                { model: User, as: 'assignee', attributes: ['name', 'id'] }
+            ],
+            order: [['startDate', 'ASC'], ['createdAt', 'ASC']]
+        });
+        res.json(epics);
+    } catch (error) {
+        console.error('Roadmap Error:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;
